@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
 COPY . .
 
 # Install Python dependencies using uv and pyproject.toml
-RUN cd python && uv sync --all-extras --dev && uv pip install uvicorn fastapi cryptography supabase python-multipart pydantic crawl4ai playwright
+RUN cd python && uv sync --all-extras --dev && uv pip install uvicorn fastapi cryptography supabase python-multipart pydantic crawl4ai playwright docker requests aiohttp websockets python-socketio
 
 # Expose port 3737 for the main service
 EXPOSE 3737
