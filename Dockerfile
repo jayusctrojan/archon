@@ -73,7 +73,7 @@ EXPOSE 3737
 ENV PYTHONPATH=/app/python
 ENV PATH="/app/python/.venv/bin:$PATH"
 
-# Create startup script that runs both services
+# Create startup script that runs both services properly
 RUN echo '#!/bin/bash\n\
 set -e\n\
 \n\
@@ -85,10 +85,13 @@ echo "Waiting for backend to start..."\n\
 sleep 5\n\
 \n\
 echo "Starting nginx..."\n\
-nginx\n\
+nginx &\n\
+NGINX_PID=$!\n\
 \n\
-echo "Services started. Backend PID: $BACKEND_PID"\n\
-wait $BACKEND_PID\n\
+echo "Services started. Backend PID: $BACKEND_PID, Nginx PID: $NGINX_PID"\n\
+\n\
+# Wait for either process to exit\n\
+wait\n\
 ' > /app/start.sh && chmod +x /app/start.sh
 
 # Start both services
