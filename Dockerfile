@@ -13,10 +13,10 @@ RUN apt-get update && apt-get install -y \
 # Copy the entire repository
 COPY . .
 
-# Install Python dependencies first, then playwright browsers
+# Install Python dependencies, force uv to use system Python
 RUN cd python && \
-    uv sync --all-extras --dev && \
-    uv pip install uvicorn fastapi cryptography supabase python-multipart pydantic docker requests aiohttp websockets python-socketio python-jose playwright && \
+    uv sync --all-extras --dev --python $(which python3) && \
+    uv pip install uvicorn fastapi cryptography supabase python-multipart pydantic docker requests aiohttp websockets python-socketio python-jose playwright crawl4ai && \
     .venv/bin/playwright install --with-deps chromium
 
 # Set working directory to python folder  
