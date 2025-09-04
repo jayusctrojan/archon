@@ -1,25 +1,27 @@
-# Use Python base image instead of Docker Compose
+# Use Python base image
 FROM python:3.11-slim
 
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies including uv for Python package management
 RUN apt-get update && apt-get install -y \
     curl \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install uv
 
-# Copy the repository
+# Copy the entire repository
 COPY . .
 
-# Install Python dependencies for the server
-RUN cd python && pip install -r requirements.txt
+# Install Python dependencies using uv and pyproject.toml
+RUN cd python && uv sync --no-dev
 
-# Expose port 3737 for the UI (main interface)
+# Expose port 3737 for the main service
 EXPOSE 3737
 
 # Set environment variables
 ENV PYTHONPATH=/app/python/src
+ENV PATH="/app/python/.venv/bin:$PATH"
 
 # Start the main Archon server
-CMD ["python", "-m", "uvicorn", "python.src.server.main:app", "--host", "0.0.0.0", "--port", "3737"]
+CMD ["python", "-m", "uvicorn", "src.server.main:app", "--host", "0.0.0.0", "--port", "3737"]
