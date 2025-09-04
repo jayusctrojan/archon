@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
 COPY . .
 
 # Install Python dependencies using uv and pyproject.toml
-RUN cd python && uv sync --all-extras --dev && uv pip install uvicorn fastapi cryptography supabase python-multipart pydantic crawl4ai playwright docker requests aiohttp websockets python-socketio python-jose
+RUN cd python && uv sync --all-extras --dev && uv pip install uvicorn fastapi cryptography supabase python-multipart pydantic crawl4ai playwright docker requests aiohttp websockets python-socketio python-jose streamlit
 
 # Set working directory to the python folder
 WORKDIR /app/python
@@ -27,4 +27,4 @@ EXPOSE 3737
 ENV PYTHONPATH=/app/python
 
 ENV PATH="/app/python/.venv/bin:$PATH"
-CMD ["python", "-m", "uvicorn", "src.server.main:app", "--host", "0.0.0.0", "--port", "3737"]
+CMD ["streamlit", "run", "streamlit_ui.py", "--server.address", "0.0.0.0", "--server.port", "3737"]
