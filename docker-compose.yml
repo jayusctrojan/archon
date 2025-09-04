@@ -22,30 +22,6 @@ services:
       - AGENTS_ENABLED=true
     networks:
       - app-network
-    command:
-      [
-        "python",
-        "-m",
-        "uvicorn",
-        "src.server.main:app",
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8181",
-        "--reload",
-      ]
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "sh",
-          "-c",
-          'python -c "import urllib.request; urllib.request.urlopen('"'"'http://localhost:8181/health'"'"')"',
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
   # AI Agents Service (ML/Reranking)
   archon-agents:
@@ -65,18 +41,6 @@ services:
       - ARCHON_SERVER_PORT=8181
     networks:
       - app-network
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "sh",
-          "-c",
-          'python -c "import urllib.request; urllib.request.urlopen('"'"'http://localhost:8052/health'"'"')"',
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
   # Lightweight MCP Server Service (HTTP-based)
   archon-mcp:
@@ -101,22 +65,8 @@ services:
     networks:
       - app-network
     depends_on:
-      archon-server:
-        condition: service_healthy
-      archon-agents:
-        condition: service_healthy
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "sh",
-          "-c",
-          'python -c "import socket; s=socket.socket(); s.connect(('"'"'localhost'"'"', 8051)); s.close()"',
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+      - archon-server
+      - archon-agents
 
   # Frontend
   archon-frontend:
@@ -132,14 +82,8 @@ services:
       - PROD=false
     networks:
       - app-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3737"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
     depends_on:
-      archon-server:
-        condition: service_healthy
+      - archon-server
 
 networks:
   app-network:
