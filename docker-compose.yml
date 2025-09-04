@@ -1,13 +1,10 @@
-# Docker Compose for Render deployment
-# Complete Archon system with all services including agents
+version: '3.8'
 
 services:
-  # Server Service (FastAPI + Socket.IO + Crawling)
   archon-server:
     build:
       context: ./python
       dockerfile: Dockerfile.server
-    container_name: archon-server
     ports:
       - "8181:8181"
     environment:
@@ -20,15 +17,11 @@ services:
       - ARCHON_MCP_PORT=8051
       - ARCHON_AGENTS_PORT=8052
       - AGENTS_ENABLED=true
-    networks:
-      - app-network
 
-  # AI Agents Service (ML/Reranking)
   archon-agents:
     build:
       context: ./python
       dockerfile: Dockerfile.agents
-    container_name: archon-agents
     ports:
       - "8052:8052"
     environment:
@@ -39,15 +32,11 @@ services:
       - LOG_LEVEL=INFO
       - ARCHON_AGENTS_PORT=8052
       - ARCHON_SERVER_PORT=8181
-    networks:
-      - app-network
 
-  # Lightweight MCP Server Service (HTTP-based)
   archon-mcp:
     build:
       context: ./python
       dockerfile: Dockerfile.mcp
-    container_name: archon-mcp
     ports:
       - "8051:8051"
     environment:
@@ -62,16 +51,9 @@ services:
       - ARCHON_MCP_PORT=8051
       - ARCHON_SERVER_PORT=8181
       - ARCHON_AGENTS_PORT=8052
-    networks:
-      - app-network
-    depends_on:
-      - archon-server
-      - archon-agents
 
-  # Frontend
   archon-frontend:
     build: ./archon-ui-main
-    container_name: archon-ui
     ports:
       - "3737:3737"
     environment:
@@ -80,11 +62,3 @@ services:
       - ARCHON_SERVER_PORT=8181
       - HOST=localhost
       - PROD=false
-    networks:
-      - app-network
-    depends_on:
-      - archon-server
-
-networks:
-  app-network:
-    driver: bridge
