@@ -20,7 +20,8 @@ RUN cd python && uv sync --all-extras --dev && uv pip install uvicorn fastapi cr
 EXPOSE 3737
 
 # Set environment variables
-ENV PYTHONPATH=/app/python/src
+WORKDIR /app/python
+ENV PYTHONPATH=/app/python/
 ENV PATH="/app/python/.venv/bin:$PATH"
 
 # Start the main Archon server
