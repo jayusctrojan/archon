@@ -19,11 +19,12 @@ RUN cd python && uv sync --all-extras --dev && uv pip install uvicorn fastapi cr
 # Set working directory to the python folder
 WORKDIR /app/python
 
+
 # Expose port 3737 for the main service
 EXPOSE 3737
 
 # Set environment variables
 ENV PYTHONPATH=/app/python
 
-# Start the main Archon server
+ENV PATH="/app/python/.venv/bin:$PATH"
 CMD ["python", "-m", "uvicorn", "src.server.main:app", "--host", "0.0.0.0", "--port", "3737"]
