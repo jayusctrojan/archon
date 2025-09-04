@@ -1,17 +1,25 @@
-# Use the official Docker-in-Docker image
-FROM docker/compose:latest
-
-# Install Docker CLI
-RUN apk add --no-cache docker-cli
+# Use Python base image instead of Docker Compose
+FROM python:3.11-slim
 
 # Set working directory
 WORKDIR /app
 
-# Copy your docker-compose.yml and other necessary files
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy the repository
 COPY . .
 
-# Expose the UI port
+# Install Python dependencies for the server
+RUN cd python && pip install -r requirements.txt
+
+# Expose port 3737 for the UI (main interface)
 EXPOSE 3737
 
-# Run docker-compose up
-CMD ["docker-compose", "up", "--build"]
+# Set environment variables
+ENV PYTHONPATH=/app/python/src
+
+# Start the main Archon server
+CMD ["python", "-m", "uvicorn", "python.src.server.main:app", "--host", "0.0.0.0", "--port", "3737"]
