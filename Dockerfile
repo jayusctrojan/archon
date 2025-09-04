@@ -1,10 +1,10 @@
 # Just run the FastAPI backend directly without React UI complexity
-FROM python:3.10-slim
+FROM python:3.11-slim
 
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies and playwright browsers
 RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/* \
@@ -13,8 +13,10 @@ RUN apt-get update && apt-get install -y \
 # Copy the entire repository
 COPY . .
 
-# Install Python dependencies
-RUN cd python && uv sync --all-extras --dev && uv pip install uvicorn fastapi cryptography supabase python-multipart pydantic docker requests aiohttp websockets python-socketio python-jose
+# Install Python dependencies and playwright browsers
+RUN cd python && uv sync --all-extras --dev && \
+    uv pip install uvicorn fastapi cryptography supabase python-multipart pydantic docker requests aiohttp websockets python-socketio python-jose && \
+    .venv/bin/playwright install --with-deps chromium
 
 # Set working directory to python folder  
 WORKDIR /app/python
