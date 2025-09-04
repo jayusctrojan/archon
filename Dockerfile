@@ -16,13 +16,14 @@ COPY . .
 # Install Python dependencies using uv and pyproject.toml
 RUN cd python && uv sync --all-extras --dev && uv pip install uvicorn fastapi cryptography supabase python-multipart pydantic crawl4ai playwright docker requests aiohttp websockets python-socketio
 
+# Set working directory to the python folder
+WORKDIR /app/python
+
 # Expose port 3737 for the main service
 EXPOSE 3737
 
 # Set environment variables
-WORKDIR /app/python
-ENV PYTHONPATH=/app/python/
-ENV PATH="/app/python/.venv/bin:$PATH"
+ENV PYTHONPATH=/app/python
 
 # Start the main Archon server
-CMD ["python", "-m", "uvicorn", "python.src.server.main:app", "--host", "0.0.0.0", "--port", "3737"]
+CMD ["python", "-m", "uvicorn", "src.server.main:app", "--host", "0.0.0.0", "--port", "3737"]
