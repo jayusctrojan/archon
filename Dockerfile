@@ -24,4 +24,4 @@ ENV PYTHONPATH=/app/python/src
 ENV PATH="/app/python/.venv/bin:$PATH"
 
 # Start the main Archon server
-CMD ["python", "-m", "uvicorn", "src.server.main:app", "--host", "0.0.0.0", "--port", "3737"]
+CMD ["python", "-m", "uvicorn", "python.src.server.main:app", "--host", "0.0.0.0", "--port", "3737"]
