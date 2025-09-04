@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
 COPY . .
 
 # Install Python dependencies using uv and pyproject.toml
-RUN cd python && uv sync --all-extras --dev
+RUN cd python && uv sync --all-extras --dev && uv pip install uvicorn
 
 # Expose port 3737 for the main service
 EXPOSE 3737
