@@ -4,7 +4,7 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies and playwright browsers
+# Install system dependencies 
 RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/* \
@@ -13,9 +13,10 @@ RUN apt-get update && apt-get install -y \
 # Copy the entire repository
 COPY . .
 
-# Install Python dependencies and playwright browsers
-RUN cd python && uv sync --all-extras --dev && \
-    uv pip install uvicorn fastapi cryptography supabase python-multipart pydantic docker requests aiohttp websockets python-socketio python-jose && \
+# Install Python dependencies first, then playwright browsers
+RUN cd python && \
+    uv sync --all-extras --dev && \
+    uv pip install uvicorn fastapi cryptography supabase python-multipart pydantic docker requests aiohttp websockets python-socketio python-jose playwright && \
     .venv/bin/playwright install --with-deps chromium
 
 # Set working directory to python folder  
