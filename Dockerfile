@@ -25,6 +25,10 @@ EXPOSE 3737
 
 # Set environment variables
 ENV PYTHONPATH=/app/python
-
 ENV PATH="/app/python/.venv/bin:$PATH"
+
+# Change back to root directory to run streamlit
+WORKDIR /app
+
+# Start the Streamlit UI
 CMD ["streamlit", "run", "streamlit_ui.py", "--server.address", "0.0.0.0", "--server.port", "3737"]
