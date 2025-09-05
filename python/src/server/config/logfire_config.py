@@ -36,6 +36,49 @@ _logfire_configured = False
 _logfire_enabled = False
 
 
+class SafeLogfire:
+    """Safe wrapper for logfire that handles None cases gracefully."""
+    
+    def __init__(self, real_logfire=None):
+        self._logfire = real_logfire
+    
+    def info(self, message, **kwargs):
+        if self._logfire:
+            try:
+                self._logfire.info(message, **kwargs)
+            except Exception:
+                pass
+    
+    def error(self, message, **kwargs):
+        if self._logfire:
+            try:
+                self._logfire.error(message, **kwargs)
+            except Exception:
+                pass
+    
+    def warning(self, message, **kwargs):
+        if self._logfire:
+            try:
+                self._logfire.warning(message, **kwargs)
+            except Exception:
+                pass
+    
+    def debug(self, message, **kwargs):
+        if self._logfire:
+            try:
+                self._logfire.debug(message, **kwargs)
+            except Exception:
+                pass
+    
+    def span(self, name, **kwargs):
+        if self._logfire:
+            try:
+                return self._logfire.span(name, **kwargs)
+            except Exception:
+                return NoOpSpan()
+        return NoOpSpan()
+
+
 def is_logfire_enabled() -> bool:
     """Check if Logfire should be enabled based on environment variables."""
     global _logfire_enabled
@@ -65,7 +108,7 @@ def setup_logfire(
         environment: Environment name (development, staging, production)
         service_name: Service name for Logfire
     """
-    global _logfire_configured, _logfire_enabled
+    global _logfire_configured, _logfire_enabled, logfire
 
     if _logfire_configured:
         return
@@ -105,6 +148,12 @@ def setup_logfire(
             logging.info("📝 Logfire configured but disabled (send_to_logfire=False)")
         except Exception as e:
             logging.warning(f"⚠️  Warning: Could not configure Logfire in disabled mode: {e}")
+
+    # Create safe logfire wrapper - this solves the AttributeError issue
+    if not _logfire_enabled:
+        logfire = SafeLogfire(None)
+    else:
+        logfire = SafeLogfire(logfire)
 
     # Set up standard Python logging (always)
     if not handlers:
@@ -314,4 +363,5 @@ __all__ = [
     "embedding_logger",
     "NoOpSpan",
     "LOGFIRE_AVAILABLE",
+    "logfire",  # Export the safe wrapper
 ]
