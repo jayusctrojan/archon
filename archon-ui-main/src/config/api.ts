@@ -7,8 +7,9 @@
 
 // Get the API URL from environment or construct it
 export function getApiUrl(): string {
-  // For relative URLs in production (goes through proxy)
-  if (import.meta.env.PROD) {
+  // Always use relative URLs for production deployment
+  // This ensures nginx proxy routing works correctly
+  if (import.meta.env.PROD || import.meta.env.MODE === 'production') {
     return '';
   }
 
@@ -17,15 +18,13 @@ export function getApiUrl(): string {
     return import.meta.env.VITE_API_URL;
   }
 
-  // For development, construct from window location
+  // For development, use relative URLs or same port as the UI
+  // This ensures development works when UI and API are on the same port
   const protocol = window.location.protocol;
   const host = window.location.hostname;
-  // Use configured port or default to 8181
-  const port = import.meta.env.VITE_ARCHON_SERVER_PORT || '8181';
+  const port = window.location.port || '3737';
   
-  if (!import.meta.env.VITE_ARCHON_SERVER_PORT) {
-    console.info('[Archon] Using default ARCHON_SERVER_PORT: 8181');
-  }
+  console.info('[Archon] Development mode - using port:', port);
   
   return `${protocol}//${host}:${port}`;
 }
