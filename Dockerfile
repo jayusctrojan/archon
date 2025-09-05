@@ -38,41 +38,54 @@ RUN cd python && \
     uv pip install uvicorn fastapi cryptography supabase python-multipart pydantic docker requests aiohttp websockets python-socketio python-jose playwright crawl4ai && \
     .venv/bin/playwright install --with-deps chromium
 
-# Copy built React UI from builder stage
+# Copy built React UI from builder stage and verify
 COPY --from=ui-builder /app/ui/dist /var/www/html
+RUN ls -la /var/www/html/ && echo "=== React build files ===" && find /var/www/html -type f -name "*.html" -o -name "*.js" -o -name "*.css" | head -10
 
-# Configure nginx to serve React UI and proxy API calls
-RUN echo 'server { \
-    listen 3737 default_server; \
-    root /var/www/html; \
-    index index.html; \
-    \
-    # Serve React app for all non-API routes \
-    location / { \
-        try_files $uri $uri/ /index.html; \
-    } \
-    \
-    # Proxy all API calls to FastAPI backend \
-    location /api/ { \
-        proxy_pass http://127.0.0.1:8000/; \
-        proxy_set_header Host $host; \
-        proxy_set_header X-Real-IP $remote_addr; \
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
-        proxy_set_header X-Forwarded-Proto $scheme; \
-        proxy_buffering off; \
-        proxy_read_timeout 300s; \
-        proxy_connect_timeout 75s; \
-    } \
-    \
-    # Health check endpoint \
-    location /health { \
-        proxy_pass http://127.0.0.1:8000/health; \
-        proxy_set_header Host $host; \
-    } \
-}' > /etc/nginx/sites-available/default
-
-# Remove nginx daemon mode
-RUN echo 'daemon off;' >> /etc/nginx/nginx.conf
+# Configure nginx properly with better error handling
+RUN echo 'events { worker_connections 1024; }\n\
+http {\n\
+    include /etc/nginx/mime.types;\n\
+    default_type application/octet-stream;\n\
+    \n\
+    access_log /var/log/nginx/access.log;\n\
+    error_log /var/log/nginx/error.log;\n\
+    \n\
+    server {\n\
+        listen 3737 default_server;\n\
+        root /var/www/html;\n\
+        index index.html;\n\
+        \n\
+        # Serve React app for all non-API routes\n\
+        location / {\n\
+            try_files $uri $uri/ /index.html;\n\
+        }\n\
+        \n\
+        # Proxy API calls to FastAPI backend\n\
+        location /api/ {\n\
+            proxy_pass http://127.0.0.1:8000/;\n\
+            proxy_set_header Host $host;\n\
+            proxy_set_header X-Real-IP $remote_addr;\n\
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n\
+            proxy_set_header X-Forwarded-Proto $scheme;\n\
+            proxy_buffering off;\n\
+            proxy_read_timeout 300s;\n\
+            proxy_connect_timeout 75s;\n\
+        }\n\
+        \n\
+        # Proxy docs and health endpoints\n\
+        location /docs {\n\
+            proxy_pass http://127.0.0.1:8000/docs;\n\
+            proxy_set_header Host $host;\n\
+        }\n\
+        \n\
+        location /health {\n\
+            proxy_pass http://127.0.0.1:8000/health;\n\
+            proxy_set_header Host $host;\n\
+        }\n\
+    }\n\
+}\n\
+daemon off;' > /etc/nginx/nginx.conf
 
 # Set working directory to python folder for backend
 WORKDIR /app/python
@@ -84,9 +97,13 @@ EXPOSE 3737
 ENV PYTHONPATH=/app/python
 ENV PATH="/app/python/.venv/bin:$PATH"
 
-# Create startup script that properly manages both services
+# Create startup script with better debugging
 RUN echo '#!/bin/bash\n\
 set -e\n\
+\n\
+echo "=== Starting Archon Services ==="\n\
+echo "Checking React build files..."\n\
+ls -la /var/www/html/\n\
 \n\
 echo "Starting FastAPI backend on port 8000..."\n\
 python -m uvicorn src.server.main:app --host 127.0.0.1 --port 8000 --log-level info &\n\
@@ -98,6 +115,9 @@ sleep 10\n\
 \n\
 echo "Testing backend health..."\n\
 curl -f http://127.0.0.1:8000/health || echo "Backend not ready yet, continuing..."\n\
+\n\
+echo "Testing nginx configuration..."\n\
+nginx -t\n\
 \n\
 echo "Starting nginx on port 3737..."\n\
 nginx\n\
