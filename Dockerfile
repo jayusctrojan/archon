@@ -13,8 +13,8 @@ RUN npm ci
 # Copy UI source code
 COPY archon-ui-main/ ./
 
-# Set environment variable so React app makes API calls to the same host/port (nginx will proxy them)
-ENV ARCHON_SERVER_PORT=3737
+# Set Vite environment variable so React app makes API calls to the same host/port (nginx will proxy them)
+ENV VITE_ARCHON_SERVER_PORT=3737
 
 # Build the React application for production
 RUN npm run build
