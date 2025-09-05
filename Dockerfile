@@ -45,7 +45,7 @@ RUN cd python && \
 COPY --from=ui-builder /app/ui/dist /var/www/html
 RUN ls -la /var/www/html/ && echo "=== React build files ===" && find /var/www/html -type f -name "*.html" -o -name "*.js" -o -name "*.css" | head -10
 
-# Configure nginx properly with better error handling
+# Configure nginx properly with corrected API routing
 RUN echo 'events { worker_connections 1024; }\n\
 http {\n\
     include /etc/nginx/mime.types;\n\
@@ -64,9 +64,9 @@ http {\n\
             try_files $uri $uri/ /index.html;\n\
         }\n\
         \n\
-        # Proxy API calls to FastAPI backend\n\
+        # Proxy API calls to FastAPI backend (FIXED: preserve /api prefix)\n\
         location /api/ {\n\
-            proxy_pass http://127.0.0.1:8000/;\n\
+            proxy_pass http://127.0.0.1:8000/api/;\n\
             proxy_set_header Host $host;\n\
             proxy_set_header X-Real-IP $remote_addr;\n\
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n\
